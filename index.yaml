@@ -1,0 +1,20 @@
+apiVersion: v1
+entries:
+  hdfs-ha:
+  - apiVersion: v2
+    appVersion: 2.9.2
+    created: "2022-12-07T10:23:57.813184324+08:00"
+    dependencies:
+    - name: common
+      repository: https://charts.bitnami.com/bitnami
+      tags:
+      - bitnami-common
+      version: 1.x.x
+    description: A Helm chart for HDFS
+    digest: 34b26fc81e0549479b040e97f467678e45f58b3fa7819397a7a8dc68c9fdd5f3
+    name: hdfs-ha
+    type: application
+    urls:
+    - https://anthony-yau.github.io/helm-charts/hdfs-ha-1.0.0.tgz
+    version: 1.0.0
+generated: "2022-12-07T10:23:57.808373663+08:00"
