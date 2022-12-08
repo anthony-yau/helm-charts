@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ printf "%s-nm-headless" (include "hdfs.fullname" .) | trunc 63 | trimSuffix "-"  }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: namenode
+    {{- if .Values.commonLabels }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- if or .Values.namenode.service.annotations .Values.commonAnnotations }}
+  annotations:
+    {{- if .Values.namenode.service.annotations }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.namenode.service.annotations "context" $ ) | nindent 4 }}
+    {{- end }}
+    {{- if .Values.commonAnnotations }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- end }}
+spec:
+  type: ClusterIP
+  clusterIP: None
+  {{ if eq .Values.namenode.service.type "LoadBalancer" }}
+  externalTrafficPolicy: {{ .Values.namenode.service.externalTrafficPolicy }}
+  {{- end }}
+  {{- if and (eq .Values.namenode.service.type "LoadBalancer") .Values.namenode.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.namenode.service.loadBalancerIP }}
+  {{- end }}
+  {{- if and (eq .Values.namenode.service.type "LoadBalancer") .Values.namenode.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges: {{- toYaml .Values.namenode.service.loadBalancerSourceRanges | nindent 4 }}
+  {{- end }}
+  {{- if and (eq .Values.namenode.service.type "ClusterIP") .Values.namenode.service.clusterIP }}
+  clusterIP: {{ .Values.namenode.service.clusterIP }}
+  {{- end }}
+  ports:
+    - name: namenode-http
+      port: {{ .Values.namenode.service.port.httpPort }}
+      targetPort: namenode-http
+      {{- if and (or (eq .Values.namenode.service.type "NodePort") (eq .Values.namenode.service.type "LoadBalancer")) .Values.namenode.service.nodePort }}
+      nodePort: {{ .Values.namenode.service.nodePort }}
+      {{- else if eq .Values.namenode.service.type "ClusterIP" }}
+      nodePort: null
+      {{- end }}
+    - name: namenode-rpc
+      port: {{ .Values.namenode.service.port.rpcPort }}
+      targetPort: namenode-rpc
+      {{- if and (or (eq .Values.namenode.service.type "NodePort") (eq .Values.namenode.service.type "LoadBalancer")) .Values.namenode.service.nodePort }}
+      nodePort: {{ .Values.namenode.service.nodePort }}
+      {{- else if eq .Values.namenode.service.type "ClusterIP" }}
+      nodePort: null
+      {{- end }}
+    - name: zkfc-rpc
+      port: {{ .Values.namenode.service.port.zkfcPort }}
+      targetPort: zkfc-rpc
+      {{- if and (or (eq .Values.namenode.service.type "NodePort") (eq .Values.namenode.service.type "LoadBalancer")) .Values.namenode.service.nodePort }}
+      nodePort: {{ .Values.namenode.service.nodePort }}
+      {{- else if eq .Values.namenode.service.type "ClusterIP" }}
+      nodePort: null
+      {{- end }}
+  selector: {{- include "common.labels.matchLabels" . | nindent 4 }}
+    app.kubernetes.io/component: namenode

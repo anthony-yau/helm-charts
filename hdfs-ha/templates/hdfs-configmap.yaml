@@ -1,0 +1,255 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ printf "%s-configmap" (include "hdfs.fullname" .) }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    {{- if .Values.commonLabels }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+data:
+  core-site.xml: |-
+    <?xml version="1.0" encoding="UTF-8"?>
+    <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+    <configuration>
+      <property>
+          <name>fs.defaultFS</name>
+          <value>hdfs://{{ .Values.dfs.clusterName }}</value>
+      </property>
+      <property>
+          <name>io.file.buffer.size</name>
+          <value>131072</value>
+      </property>
+      <property>
+          <name>hadoop.tmp.dir</name>
+          <value>{{ .Values.namenode.persistence.tmpDir }}</value>
+      </property>
+      <property>
+            <name>fs.trash.interval</name>      
+            <value>1440</value>
+      </property>
+    </configuration>
+  hdfs-site.xml: |-
+    <?xml version="1.0" encoding="UTF-8"?>
+    <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+    <configuration>
+      <property>
+          <name>dfs.replication</name>
+          <value>{{ .Values.dfs.replication }}</value>
+      </property>
+      <property>
+          <name>dfs.namenode.name.dir</name>
+          <value>file://{{ .Values.namenode.persistence.dataDir }}</value>
+      </property>
+      <property>
+          <name>dfs.hosts.exclude</name>
+          <value>{{ .Values.dfs.hostsExcludeFile }}</value>
+      </property>
+      <property>    
+          <name>dfs.blocksize</name>
+          <value>134217728</value>    
+      </property>
+      <property>    
+          <name>dfs.namenode.handler.count</name>    
+          <value>100</value>
+      </property>
+      <property>
+          <name>dfs.namenode.heartbeat.recheck-interval</name>
+          <value>600000</value>
+          <description>ms</description>
+      </property>
+      <property>
+          <name>dfs.namenode.service.handler.count</name>
+          <value>50</value>
+      </property>
+      <!-- IPC config -->
+      <property>
+          <name>ipc.server.listen.queue.size</name>
+          <value>12800</value>
+      </property>
+      <property>
+          <name>ipc.maximum.data.length</name>
+          <value>268435456</value>
+      </property>
+      <property>
+          <name>ipc.client.connect.timeout</name>
+          <value>60000</value>
+      </property>
+      <!--配置机架感知-->
+      <!--
+      <property>
+          <name>net.topology.script.file.name</name>
+          <value>/root/datanode_rock.py</value>
+      </property>
+      -->
+      <!--HDFS HA START-->
+      <!--服务名称-->
+      <property>
+          <name>dfs.nameservices</name>
+          <value>{{ .Values.dfs.clusterName }}</value>
+      </property>
+      <!--NameNode 唯一ID-->
+      <property>
+          <name>dfs.ha.namenodes.{{ .Values.dfs.clusterName }}</name>
+          <value>nn1,nn2</value>
+      </property>
+      <!--
+      <property>
+          <name>dfs.ha.namenode.id</name>
+          <value>nn1</value>
+      </property>
+      -->
+      <!--NameNode RPC监听地址-->
+      <property>
+          <name>dfs.namenode.rpc-address.{{ .Values.dfs.clusterName }}.nn1</name>
+          <value>{{ include "hdfs.namenode.hostname0" . }}:9000</value>
+      </property>
+      <property>
+          <name>dfs.namenode.rpc-address.{{ .Values.dfs.clusterName }}.nn2</name>
+          <value>{{ include "hdfs.namenode.hostname1" . }}:9000</value>
+      </property>
+      <!--NameNode Service RPC监听地址, 用于DataNode等其他节点连接-->
+      <property>
+          <name>dfs.namenode.servicerpc-address.{{ .Values.dfs.clusterName }}.nn1</name>
+          <value>{{ include "hdfs.namenode.hostname0" . }}:53310</value>
+      </property>
+      <property>
+          <name>dfs.namenode.servicerpc-address.{{ .Values.dfs.clusterName }}.nn2</name>
+          <value>{{ include "hdfs.namenode.hostname1" . }}:53310</value>
+      </property>
+      <!--NameNode HTTP监听地址 -->
+      <property>
+          <name>dfs.namenode.http-address.{{ .Values.dfs.clusterName }}.nn1</name>
+          <value>{{ include "hdfs.namenode.hostname0" . }}:9870</value>
+      </property>
+      <property>
+          <name>dfs.namenode.http-address.{{ .Values.dfs.clusterName }}.nn2</name>
+          <value>{{ include "hdfs.namenode.hostname1" . }}:9870</value>
+      </property>
+      <!--JournalNodes 地址 -->
+      <property>
+          <name>dfs.namenode.shared.edits.dir</name>
+          <value>qjournal://{{ include "hdfs.journalnode.hostname0" . }}:8485;{{ include "hdfs.journalnode.hostname1" . }}:8485;{{ include "hdfs.journalnode.hostname2" . }}:8485/{{ .Values.dfs.clusterName }}</value>
+      </property>
+      <!--HDFS 客户端判断Active NameNode的类 -->
+      <property>
+          <name>dfs.client.failover.proxy.provider.{{ .Values.dfs.clusterName }}</name>
+          <value>org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider</value>
+      </property>
+      <!--进行Failover时的fence方法(支持sshfence/shell) -->
+      <property>
+          <name>dfs.ha.fencing.methods</name>
+          <value>shell(true)</value>
+      </property>
+      <!--
+      <property>
+          <name>dfs.ha.fencing.ssh.private-key-files</name>
+          <value>/root/.ssh/id_rsa</value>
+      </property>
+      -->
+      <property>
+          <name>dfs.ha.fencing.ssh.connect-timeout</name>
+          <value>30000</value>
+      </property>
+      <!--JournalNode 存储目录-->
+      <property>
+          <name>dfs.journalnode.edits.dir</name>
+          <value>{{ .Values.journalnode.persistence.dataDir }}</value>
+      </property>
+      <!--HDFS HA END-->
+      <!--HDFS HA Auto Failover START-->
+      <property>
+          <name>dfs.ha.automatic-failover.enabled</name>
+          <value>true</value>
+      </property>
+      <property>
+          <name>ha.zookeeper.quorum</name>
+          <value>{{ .Values.dfs.zookeeper.host }}:{{ .Values.dfs.zookeeper.port }}</value>
+      </property>
+      <property>
+          <name>ha.zookeeper.session-timeout.ms</name>
+          <value>20000</value>
+      </property>
+      <property>
+          <name>dfs.ha.zkfc.port</name>
+          <value>8019</value>
+      </property>
+      <!--HDFS HA Auto Failover END-->
+      <property>
+          <name>ha.failover-controller.cli-check.rpc-timeout.ms</name>
+          <value>60000</value>
+      </property>
+      <property>
+          <name>dfs.image.transfer.bandwidthPerSec</name>
+          <value>52428800</value>
+      </property>
+      <!-- Client Config START-->
+      <property>
+          <name>dfs.client.block.write.replace-datanode-on-failure.enable</name>
+          <value>true</value>
+      </property>
+      <property>
+          <name>dfs.client.block.write.replace-datanode-on-failure.policy</name>
+          <value>ALWAYS</value>
+      </property>
+      <!-- 设置为True可能会有数据丢失，默认是False-->
+      <property>
+          <name>dfs.client.block.write.replace-datanode-on-failure.best-effort</name>
+          <value>false</value>
+      </property>
+      <property>
+          <name>dfs.client.socket-timeout</name>
+          <value>300000</value>
+      </property>
+      <!-- Client Config END-->
+
+      <!-- DataNode Config START-->
+      <property>
+          <name>dfs.datanode.socket.write.timeout</name>
+          <value>6000000</value>
+      </property>
+      <!--datanode数据存储目录，可以指定多个不同的设备目录-->
+      <property>
+          <name>dfs.datanode.data.dir</name>
+          <value>{{ .Values.datanode.persistence.dataDir }}</value>
+      </property>
+      <!-- 避免磁盘写满(保留5G) -->
+      <property>
+          <name>dfs.datanode.du.reserved</name>
+          <value>5368709120</value>
+          <description>Reserved space in bytes per volume. Always leave this much space free for non dfs use.</description>
+      </property>
+      <property>  
+          <name>dfs.datanode.fsdataset.volume.choosing.policy</name>  
+          <value>org.apache.hadoop.hdfs.server.datanode.fsdataset.AvailableSpaceVolumeChoosingPolicy</value>  
+      </property>
+      <!-- DataNode Config END-->
+      <!-- webhdfs config -->
+      <property>
+          <name>dfs.webhdfs.enabled</name>
+          <value>true</value>
+      </property>
+      <property>
+          <name>dfs.support.append</name>
+          <value>true</value>
+      </property>
+      <property>
+          <name>dfs.support.broken.append</name>
+          <value>true</value>
+      </property>
+      <property>
+          <name>dfs.namenode.datanode.registration.ip-hostname-check</name>
+          <value>false</value>
+      </property>
+      <property>
+          <name>dfs.namenode.rpc-bind-host</name>
+          <value>0.0.0.0</value>
+      </property>
+      <property>
+          <name>dfs.namenode.servicerpc-bind-host</name>
+          <value>0.0.0.0</value>
+      </property>
+    </configuration>

@@ -1,0 +1,23 @@
+Thank you for installing {{ .Chart.Name }}.
+
+Your release is named {{ .Release.Name }}.
+
+To Check Cluster Pod status, try:
+  $ kubectl get pod -n {{ .Release.Namespace }}
+
+To learn more about the release, try:
+
+  $ helm status {{ .Release.Name }} -n {{ .Release.Namespace }}
+  $ helm get all {{ .Release.Name }} -n {{ .Release.Namespace }}
+
+To Check HDFS Cluster status, try:
+  
+  $ kubectl exec -it -n {{ .Release.Namespace }} \
+    `kubectl get pod -n {{ .Release.Namespace }} \
+    -l app.kubernetes.io/component=namenode -o custom-columns=CONTAINER:.metadata.name|tail -n1` \
+    -c namenode -- hdfs haadmin -getAllServiceState
+
+  $ kubectl exec -it -n {{ .Release.Namespace }} \
+    `kubectl get pod -n {{ .Release.Namespace }} \
+    -l app.kubernetes.io/component=namenode -o custom-columns=CONTAINER:.metadata.name|tail -n1` \
+    -c namenode -- hdfs dfsadmin -report

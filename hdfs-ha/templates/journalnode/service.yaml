@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ printf "%s-jn-headless" (include "hdfs.fullname" .) | trunc 63 | trimSuffix "-"  }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: journalnode
+    {{- if .Values.commonLabels }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- if or .Values.journalnode.service.annotations .Values.commonAnnotations }}
+  annotations:
+    {{- if .Values.journalnode.service.annotations }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.journalnode.service.annotations "context" $ ) | nindent 4 }}
+    {{- end }}
+    {{- if .Values.commonAnnotations }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- end }}
+spec:
+  type: ClusterIP
+  clusterIP: None
+  {{ if eq .Values.journalnode.service.type "LoadBalancer" }}
+  externalTrafficPolicy: {{ .Values.journalnode.service.externalTrafficPolicy }}
+  {{- end }}
+  {{- if and (eq .Values.journalnode.service.type "LoadBalancer") .Values.journalnode.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.journalnode.service.loadBalancerIP }}
+  {{- end }}
+  {{- if and (eq .Values.journalnode.service.type "LoadBalancer") .Values.journalnode.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges: {{- toYaml .Values.journalnode.service.loadBalancerSourceRanges | nindent 4 }}
+  {{- end }}
+  {{- if and (eq .Values.journalnode.service.type "ClusterIP") .Values.journalnode.service.clusterIP }}
+  clusterIP: {{ .Values.journalnode.service.clusterIP }}
+  {{- end }}
+  ports:
+    - name: jn-http
+      port: {{ .Values.journalnode.service.port.httpPort }}
+      targetPort: jn-http
+      {{- if and (or (eq .Values.journalnode.service.type "NodePort") (eq .Values.journalnode.service.type "LoadBalancer")) .Values.journalnode.service.nodePort }}
+      nodePort: {{ .Values.journalnode.service.nodePort }}
+      {{- else if eq .Values.journalnode.service.type "ClusterIP" }}
+      nodePort: null
+      {{- end }}
+    - name: jn-rpc
+      port: {{ .Values.journalnode.service.port.rpcPort }}
+      targetPort: jn-rpc
+      {{- if and (or (eq .Values.journalnode.service.type "NodePort") (eq .Values.journalnode.service.type "LoadBalancer")) .Values.journalnode.service.nodePort }}
+      nodePort: {{ .Values.journalnode.service.nodePort }}
+      {{- else if eq .Values.journalnode.service.type "ClusterIP" }}
+      nodePort: null
+      {{- end }}
+  selector: {{- include "common.labels.matchLabels" . | nindent 4 }}
+    app.kubernetes.io/component: journalnode

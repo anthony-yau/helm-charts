@@ -1,0 +1,367 @@
+apiVersion: {{ include "common.capabilities.statefulset.apiVersion" . }}
+kind: StatefulSet
+metadata:
+  name: {{ printf "%s-namenode" (include "hdfs.fullname" .) }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: namenode
+    {{- if .Values.commonLabels }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.namenode.replicaCount }}
+  selector:
+    matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: namenode
+  serviceName: {{ printf "%s-nm-headless" (include "hdfs.fullname" .) | trunc 63 | trimSuffix "-"  }}
+  {{- if .Values.namenode.updateStrategy }}
+  updateStrategy: {{- toYaml .Values.namenode.updateStrategy | nindent 4 }}
+  {{- end }}
+  template:
+    metadata:
+      labels: {{- include "common.labels.standard" . | nindent 8 }}
+        app.kubernetes.io/component: namenode
+        {{- if .Values.namenode.podLabels }}
+        {{- include "common.tplvalues.render" ( dict "value" .Values.namenode.podLabels "context" $ ) | nindent 8 }}
+        {{- end }}
+      annotations:
+        {{- if .Values.namenode.podAnnotations }}
+        {{- include "common.tplvalues.render" ( dict "value" .Values.namenode.podAnnotations "context" $ ) | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- include "hdfs.imagePullSecrets" . | nindent 6 }}
+      {{- if .Values.namenode.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.namenode.hostAliases "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.namenode.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.namenode.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ template "hdfs.serviceAccountName" . }}
+      {{- if .Values.namenode.priorityClassName }}
+      priorityClassName: {{ .Values.namenode.priorityClassName | quote }}
+      {{- end }}
+      {{- if .Values.namenode.affinity }}
+      affinity: {{- include "common.tplvalues.render" (dict "value" .Values.namenode.affinity "context" $) | nindent 8 }}
+      {{- else }}
+      affinity:
+        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.namenode.podAffinityPreset "component" "hdfs" "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.namenode.podAntiAffinityPreset "component" "hdfs" "context" $) | nindent 10 }}
+        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.namenode.nodeAffinityPreset.type "key" .Values.namenode.nodeAffinityPreset.key "values" .Values.namenode.nodeAffinityPreset.values) | nindent 10 }}
+      {{- end }}
+      {{- if .Values.namenode.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" (dict "value" .Values.namenode.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.namenode.tolerations }}
+      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.namenode.tolerations "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.namenode.spreadConstraints }}
+      topologySpreadConstraints: {{- include "common.tplvalues.render" (dict "value" .Values.namenode.spreadConstraints "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.namenode.shareProcessNamespace }}
+      shareProcessNamespace: {{ .Values.namenode.shareProcessNamespace }}
+      {{- end }}
+      {{- if .Values.namenode.schedulerName }}
+      schedulerName: {{ .Values.namenode.schedulerName | quote }}
+      {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.namenode.terminationGracePeriodSeconds }}
+      containers:
+        - name: namenode
+          image: {{ template "hdfs.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          {{- if .Values.namenode.lifecycleHooks }}
+          lifecycle: {{- include "common.tplvalues.render" (dict "value" .Values.namenode.lifecycleHooks "context" $) | nindent 12 }}
+          {{- end }}
+          {{- if .Values.namenode.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.namenode.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.diagnosticMode.enabled }}
+          command: {{- include "common.tplvalues.render" (dict "value" .Values.diagnosticMode.command "context" $) | nindent 12 }}
+          {{- else if .Values.namenode.command }}
+          command: {{- include "common.tplvalues.render" (dict "value" .Values.namenode.command "context" $) | nindent 12 }}
+          {{- else }}
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              num=`hostname|awk -F'-' '{print $NF}'`
+              if [ $num -ne 0 ];then
+                hdfs namenode -bootstrapStandby -nonInteractive;
+              fi
+              hdfs namenode
+          {{- end }}
+          {{- if .Values.diagnosticMode.enabled }}
+          args: {{- include "common.tplvalues.render" (dict "value" .Values.diagnosticMode.args "context" $) | nindent 12 }}
+          {{- else if .Values.namenode.args }}
+          args: {{- include "common.tplvalues.render" (dict "value" .Values.namenode.args "context" $) | nindent 12 }}
+          {{- end }}
+          env:
+            - name: DEBUG
+              value: {{ ternary "true" "false" (or .Values.image.debug .Values.diagnosticMode.enabled) | quote }}
+          ports:
+            - name: namenode-http
+              containerPort: {{ .Values.namenode.containerPort.httpPort }}
+            - name: namenode-rpc
+              containerPort: {{ .Values.namenode.containerPort.rpcPort }}
+          {{- if not .Values.diagnosticMode.enabled }}
+          {{- if .Values.namenode.livenessProbe.enabled }}
+          livenessProbe:
+            initialDelaySeconds: {{ .Values.namenode.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.namenode.livenessProbe.periodSeconds }}
+            # One second longer than command timeout should prevent generation of zombie processes.
+            timeoutSeconds: {{ add1 .Values.namenode.livenessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.namenode.livenessProbe.successThreshold }}
+            failureThreshold: {{ .Values.namenode.livenessProbe.failureThreshold }}
+            tcpSocket:
+              port: {{ .Values.namenode.containerPort.rpcPort }}
+          {{- else if .Values.namenode.customLivenessProbe }}
+          livenessProbe: {{- toYaml .Values.namenode.customLivenessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.namenode.readinessProbe.enabled }}
+          readinessProbe:
+            initialDelaySeconds: {{ .Values.namenode.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.namenode.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ add1 .Values.namenode.readinessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.namenode.readinessProbe.successThreshold }}
+            failureThreshold: {{ .Values.namenode.readinessProbe.failureThreshold }}
+            tcpSocket:
+              port: {{ .Values.namenode.containerPort.rpcPort }}
+          {{- else if .Values.namenode.customReadinessProbe }}
+          readinessProbe: {{- toYaml .Values.namenode.customReadinessProbe | nindent 12 }}
+          {{- end }}
+          {{- end }}
+          {{- if .Values.namenode.resources }}
+          resources: {{- toYaml .Values.namenode.resources | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: hdfs-data
+              mountPath: {{ .Values.namenode.persistence.path }}
+              subPath: {{ .Values.namenode.persistence.subPath }}
+            - name: config
+              mountPath: "/opt/hadoop/etc/hadoop/core-site.xml"
+              subPath: "core-site.xml"
+            - name: config
+              mountPath: "/opt/hadoop/etc/hadoop/hdfs-site.xml"
+              subPath: "hdfs-site.xml"
+            - name: hadoop-env-sh
+              mountPath: "/opt/hadoop/etc/hadoop/hadoop-env.sh"
+              subPath: "hadoop-env.sh"
+            {{- if .Values.namenode.extraVolumeMounts }}
+            {{- include "common.tplvalues.render" ( dict "value" .Values.namenode.extraVolumeMounts "context" $ ) | nindent 12 }}
+            {{- end }}
+        {{- if .Values.namenode.sidecars }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.namenode.sidecars "context" $) | nindent 8 }}
+        {{- end }}
+      {{- $needsVolumePermissions := and .Values.volumePermissions.enabled .Values.namenode.persistence.enabled .Values.namenode.podSecurityContext.enabled .Values.namenode.containerSecurityContext.enabled }}
+        - name: zkfc
+          image: {{ template "hdfs.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          {{- if .Values.namenode.lifecycleHooks }}
+          lifecycle: {{- include "common.tplvalues.render" (dict "value" .Values.namenode.lifecycleHooks "context" $) | nindent 12 }}
+          {{- end }}
+          {{- if .Values.namenode.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.namenode.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.diagnosticMode.enabled }}
+          command: {{- include "common.tplvalues.render" (dict "value" .Values.diagnosticMode.command "context" $) | nindent 12 }}
+          {{- else if .Values.namenode.command }}
+          command: {{- include "common.tplvalues.render" (dict "value" .Values.namenode.command "context" $) | nindent 12 }}
+          {{- else }}
+          command:
+            - /bin/bash
+          {{- end }}
+          {{- if .Values.diagnosticMode.enabled }}
+          args: {{- include "common.tplvalues.render" (dict "value" .Values.diagnosticMode.args "context" $) | nindent 12 }}
+          {{- else if .Values.namenode.args }}
+          args: {{- include "common.tplvalues.render" (dict "value" .Values.namenode.args "context" $) | nindent 12 }}
+          {{- else }}
+          args:
+            - -c
+            - hdfs zkfc
+          {{- end }}
+          env:
+            - name: DEBUG
+              value: {{ ternary "true" "false" (or .Values.image.debug .Values.diagnosticMode.enabled) | quote }}
+          ports:
+            - name: zkfc-rpc
+              containerPort: {{ .Values.namenode.containerPort.zkfcPort }}
+          {{- if not .Values.diagnosticMode.enabled }}
+          {{- if .Values.namenode.livenessProbe.enabled }}
+          livenessProbe:
+            initialDelaySeconds: {{ .Values.namenode.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.namenode.livenessProbe.periodSeconds }}
+            # One second longer than command timeout should prevent generation of zombie processes.
+            timeoutSeconds: {{ add1 .Values.namenode.livenessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.namenode.livenessProbe.successThreshold }}
+            failureThreshold: {{ .Values.namenode.livenessProbe.failureThreshold }}
+            tcpSocket:
+              port: {{ .Values.namenode.containerPort.rpcPort }}
+          {{- else if .Values.namenode.customLivenessProbe }}
+          livenessProbe: {{- toYaml .Values.namenode.customLivenessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.namenode.readinessProbe.enabled }}
+          readinessProbe:
+            initialDelaySeconds: {{ .Values.namenode.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.namenode.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ add1 .Values.namenode.readinessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.namenode.readinessProbe.successThreshold }}
+            failureThreshold: {{ .Values.namenode.readinessProbe.failureThreshold }}
+            tcpSocket:
+              port: {{ .Values.namenode.containerPort.rpcPort }}
+          {{- else if .Values.namenode.customReadinessProbe }}
+          readinessProbe: {{- toYaml .Values.namenode.customReadinessProbe | nindent 12 }}
+          {{- end }}
+          {{- end }}
+          {{- if .Values.namenode.resources }}
+          resources: {{- toYaml .Values.namenode.resources | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: hdfs-data
+              mountPath: {{ .Values.namenode.persistence.path }}
+              subPath: {{ .Values.namenode.persistence.subPath }}
+            - name: config
+              mountPath: "/opt/hadoop/etc/hadoop/core-site.xml"
+              subPath: "core-site.xml"
+            - name: config
+              mountPath: "/opt/hadoop/etc/hadoop/hdfs-site.xml"
+              subPath: "hdfs-site.xml"
+            - name: hadoop-env-sh
+              mountPath: "/opt/hadoop/etc/hadoop/hadoop-env.sh"
+              subPath: "hadoop-env.sh"
+            {{- if .Values.namenode.extraVolumeMounts }}
+            {{- include "common.tplvalues.render" ( dict "value" .Values.namenode.extraVolumeMounts "context" $ ) | nindent 12 }}
+            {{- end }}
+        {{- if .Values.namenode.sidecars }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.namenode.sidecars "context" $) | nindent 8 }}
+        {{- end }}
+      {{- $needsVolumePermissions := and .Values.volumePermissions.enabled .Values.namenode.persistence.enabled .Values.namenode.podSecurityContext.enabled .Values.namenode.containerSecurityContext.enabled }}
+      {{- if or .Values.namenode.initContainers $needsVolumePermissions .Values.sysctl.enabled }}
+      initContainers:
+        {{- if .Values.namenode.initContainers }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.namenode.initContainers "context" $) | nindent 8 }}
+        {{- end }}
+        - name: namenode-format
+          image: {{ template "hdfs.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              num=`hostname|awk -F'-' '{print $NF}'`
+              if [ $num -ne 0 ];then
+                echo "this is not nn1"
+                exit 0
+              fi
+
+              if [ ! -f /data/hadoop/namenode_format_zk.lock ];then
+                hdfs zkfc -formatZK -nonInteractive && touch /data/hadoop/namenode_format_zk.lock
+              fi
+
+              if [ ! -f /data/hadoop/namenode_format.lock ];then
+                hdfs namenode -format && touch /data/hadoop/namenode_format.lock
+              fi
+          volumeMounts:
+            - name: hdfs-data
+              mountPath: {{ .Values.namenode.persistence.path }}
+              subPath: {{ .Values.namenode.persistence.subPath }}
+            - name: config
+              mountPath: "/opt/hadoop/etc/hadoop/core-site.xml"
+              subPath: "core-site.xml"
+            - name: config
+              mountPath: "/opt/hadoop/etc/hadoop/hdfs-site.xml"
+              subPath: "hdfs-site.xml"
+            - name: hadoop-env-sh
+              mountPath: "/opt/hadoop/etc/hadoop/hadoop-env.sh"
+              subPath: "hadoop-env.sh"
+        {{- if $needsVolumePermissions }}
+        - name: volume-permissions
+          image: {{ include "hdfs.volumePermissions.image" . }}
+          imagePullPolicy: {{ .Values.volumePermissions.image.pullPolicy | quote }}
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              {{- if eq ( toString ( .Values.volumePermissions.containerSecurityContext.runAsUser )) "auto" }}
+              chown -R `id -u`:`id -G | cut -d " " -f2` {{ .Values.namenode.persistence.path }}
+              {{- else }}
+              chown -R {{ .Values.namenode.containerSecurityContext.runAsUser }}:{{ .Values.namenode.podSecurityContext.fsGroup }} {{ .Values.namenode.persistence.path }}
+              {{- end }}
+          {{- if eq ( toString ( .Values.volumePermissions.containerSecurityContext.runAsUser )) "auto" }}
+          securityContext: {{- omit .Values.volumePermissions.containerSecurityContext "runAsUser" | toYaml | nindent 12 }}
+          {{- else }}
+          securityContext: {{- .Values.volumePermissions.containerSecurityContext | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.volumePermissions.resources }}
+          resources: {{- toYaml .Values.volumePermissions.resources | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: hdfs-data
+              mountPath: {{ .Values.namenode.persistence.path }}
+              subPath: {{ .Values.namenode.persistence.subPath }}
+        {{- end }}
+        {{- if .Values.sysctl.enabled }}
+        - name: init-sysctl
+          image: {{ include "hdfs.sysctl.image" . }}
+          imagePullPolicy: {{ default "" .Values.sysctl.image.pullPolicy | quote }}
+          securityContext:
+            privileged: true
+            runAsUser: 0
+          {{- if .Values.sysctl.command }}
+          command: {{- include "common.tplvalues.render" (dict "value" .Values.sysctl.command "context" $) | nindent 12 }}
+          {{- end }}
+          {{- if .Values.sysctl.resources }}
+          resources: {{- toYaml .Values.sysctl.resources | nindent 12 }}
+          {{- end }}
+          {{- if .Values.sysctl.mountHostSys }}
+          volumeMounts:
+            - name: host-sys
+              mountPath: /host-sys
+          {{- end }}
+        {{- end }}
+      {{- end }}
+      volumes:
+        {{- if .Values.sysctl.mountHostSys }}
+        - name: host-sys
+          hostPath:
+            path: /sys
+        {{- end }}
+        - name: config
+          configMap:
+            name: {{ printf "%s-configmap" (include "hdfs.fullname" .) }}
+        - name: hadoop-env-sh
+          configMap:
+            name: {{ printf "%s-nn-configmap" (include "hdfs.fullname" .) }}
+        {{- if .Values.namenode.extraVolumes }}
+        {{- include "common.tplvalues.render" ( dict "value" .Values.namenode.extraVolumes "context" $ ) | nindent 8 }}
+        {{- end }}
+  {{- if not .Values.namenode.persistence.enabled }}
+        - name: hdfs-data
+          emptyDir: {}
+  {{- else if .Values.namenode.persistence.existingClaim }}
+        - name: hdfs-data
+          persistentVolumeClaim:
+            claimName: {{ printf "%s" (tpl .Values.namenode.persistence.existingClaim .) }}
+  {{- else }}
+  volumeClaimTemplates:
+    - metadata:
+        name: hdfs-data
+        labels: {{- include "common.labels.matchLabels" . | nindent 10 }}
+          app.kubernetes.io/component: namenode
+        {{- if .Values.namenode.persistence.annotations }}
+        annotations: {{- toYaml .Values.namenode.persistence.annotations | nindent 10 }}
+        {{- end }}
+      spec:
+        accessModes:
+        {{- range .Values.namenode.persistence.accessModes }}
+          - {{ . | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.namenode.persistence.size | quote }}
+        {{- if .Values.namenode.persistence.selector }}
+        selector: {{- include "common.tplvalues.render" (dict "value" .Values.namenode.persistence.selector "context" $) | nindent 10 }}
+        {{- end }}
+        {{- include "common.storage.class" (dict "persistence" .Values.namenode.persistence "global" .Values.global) | nindent 8 }}
+  {{- end }}

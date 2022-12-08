@@ -1,0 +1,12 @@
+apiVersion: v2
+appVersion: 2.9.2
+dependencies:
+- name: common
+  repository: https://charts.bitnami.com/bitnami
+  tags:
+  - bitnami-common
+  version: 1.x.x
+description: A Helm chart for HDFS
+name: hdfs-ha
+type: application
+version: 1.0.0
