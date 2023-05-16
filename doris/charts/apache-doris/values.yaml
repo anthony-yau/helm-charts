@@ -1,0 +1,1148 @@
+## @section Global parameters
+## Global Docker image parameters
+## Please, note that this will override the image parameters, including dependencies, configured to use the global value
+## Current available global Docker image parameters: imageRegistry, imagePullSecrets and storageClass
+##
+
+## @param global.imageRegistry Global Docker image registry
+## @param global.imagePullSecrets Global Docker registry secret names as an array
+## @param global.storageClass Global StorageClass for Persistent Volume(s)
+##
+global:
+  imageRegistry: ""
+  ## E.g.
+  ## imagePullSecrets:
+  ##   - myRegistryKeySecretName
+  ##
+  imagePullSecrets: []
+  storageClass: ""
+
+## @section Common parameters
+##
+
+## @param kubeVersion Override Kubernetes version
+##
+kubeVersion: ""
+## @param nameOverride String to partially override common.names.fullname
+##
+nameOverride: ""
+## @param fullnameOverride String to fully override common.names.fullname
+##
+fullnameOverride: ""
+## @param commonLabels Labels to add to all deployed objects
+##
+commonLabels: {}
+## @param commonAnnotations Annotations to add to all deployed objects
+##
+commonAnnotations: {}
+## @param clusterDomain Kubernetes cluster domain name
+##
+clusterDomain: cluster.local
+## @param extraDeploy Array of extra objects to deploy with the release
+##
+extraDeploy: []
+
+## Enable diagnostic mode in the deployment
+##
+diagnosticMode:
+  ## @param diagnosticMode.enabled Enable diagnostic mode (all probes will be disabled and the command will be overridden)
+  ##
+  enabled: false
+  ## @param diagnosticMode.command Command to override all containers in the deployment
+  ##
+  command:
+    - sleep
+  ## @param diagnosticMode.args Args to override all containers in the deployment
+  ##
+  args:
+    - infinity
+
+## @section apache doris; common configuration parameters
+##
+
+## @param existingConfigmap The name of an existing ConfigMap with your custom configuration for apache doris; nodes
+##
+existingConfigmap: ""
+
+## @section FE(FRONTEND)配置参数
+##
+frontend:
+  ## 指定FRONTEND的镜像仓库信息
+  ##
+  image:
+    registry: mirrors.aliyun.com
+    repository: doris-fe
+    tag: 1.2.3
+    ## Specify a imagePullPolicy
+    ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+    ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+    ##
+    pullPolicy: Always
+    ## Optionally specify an array of imagePullSecrets.
+    ## Secrets must be manually created in the namespace.
+    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+    ## e.g:
+    ## pullSecrets:
+    ##   - myRegistryKeySecretName
+    ##
+    pullSecrets: []
+    ## Enable debug mode
+    ##
+    debug: false
+  # 
+  replicaCount: 3
+  ## @param namenode.configuration Configuration for apache doris; master nodes
+  ##
+  configuration: ""
+  ## @param namenode.command Override default container command (useful when using custom images)
+  ##
+  command: []
+  ## @param namenode.args Override default container args (useful when using custom images)
+  ##
+  args: []
+  ## @param namenode.preExecCmds Additional commands to run prior to starting apache doris; master
+  ## 9000 50070
+  containerPort: 
+    rpcPort: 9020
+    httpPort: 8030
+    queryPort: 9030
+    editLogPort: 9010
+  ## Configure extra options for apache doris; containers' liveness and readiness probes
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+  ## @param namenode.livenessProbe.enabled Enable livenessProbe on apache doris; master nodes
+  ## @param namenode.livenessProbe.initialDelaySeconds Initial delay seconds for livenessProbe
+  ## @param namenode.livenessProbe.periodSeconds Period seconds for livenessProbe
+  ## @param namenode.livenessProbe.timeoutSeconds Timeout seconds for livenessProbe
+  ## @param namenode.livenessProbe.failureThreshold Failure threshold for livenessProbe
+  ## @param namenode.livenessProbe.successThreshold Success threshold for livenessProbe
+  ##
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 5
+  ## @param namenode.readinessProbe.enabled Enable readinessProbe on apache doris; master nodes
+  ## @param namenode.readinessProbe.initialDelaySeconds Initial delay seconds for readinessProbe
+  ## @param namenode.readinessProbe.periodSeconds Period seconds for readinessProbe
+  ## @param namenode.readinessProbe.timeoutSeconds Timeout seconds for readinessProbe
+  ## @param namenode.readinessProbe.failureThreshold Failure threshold for readinessProbe
+  ## @param namenode.readinessProbe.successThreshold Success threshold for readinessProbe
+  ##
+  readinessProbe:
+    enabled: false
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 5
+  ## @param namenode.customLivenessProbe Custom livenessProbe that overrides the default one
+  ##
+  customLivenessProbe: {}
+  ## @param namenode.customReadinessProbe Custom readinessProbe that overrides the default one
+  ##
+  customReadinessProbe: {}
+
+  # 定义Java Heap Size(单位GB)
+  heapSize: 1
+  ## apache doris; master resource requests and limits
+  ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+  ## @param namenode.resources.limits The resources limits for the apache doris; master containers
+  ## @param namenode.resources.requests The requested resources for the apache doris; master containers
+  ##
+  resources:
+    limits: {}
+    requests: {}
+  ## Configure Pods Security Context
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
+  ## @param namenode.podSecurityContext.enabled Enabled apache doris; master pods' Security Context
+  ## @param namenode.podSecurityContext.fsGroup Set apache doris; master pod's Security Context fsGroup
+  ##
+  podSecurityContext:
+    enabled: false
+    fsGroup: 1001
+  ## Configure Container Security Context
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
+  ## @param namenode.containerSecurityContext.enabled Enabled apache doris; master containers' Security Context
+  ## @param namenode.containerSecurityContext.runAsUser Set apache doris; master containers' Security Context runAsUser
+  ##
+  containerSecurityContext:
+    enabled: false
+    runAsUser: 1001
+  ## @param namenode.schedulerName Alternate scheduler for apache doris; master pods
+  ## ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
+  ##
+  schedulerName: ""
+  ## @param namenode.updateStrategy.type apache doris; master statefulset strategy type
+  ## @skip namenode.updateStrategy.rollingUpdate
+  ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
+  ##
+  updateStrategy:
+    ## StrategyType
+    ## Can be set to RollingUpdate or OnDelete
+    ##
+    type: RollingUpdate
+    rollingUpdate: {}
+  ## @param namenode.priorityClassName apache doris; master pods' priorityClassName
+  ##
+  priorityClassName: ""
+  ## @param namenode.hostAliases apache doris; master pods host aliases
+  ## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
+  ##
+  hostAliases: []
+  ## @param namenode.podLabels Extra labels for apache doris; master pods
+  ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+  ##
+  podLabels: {}
+  ## @param namenode.podAnnotations Annotations for apache doris; master pods
+  ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+  ##
+  podAnnotations: {}
+  ## @param namenode.shareProcessNamespace Share a single process namespace between all of the containers in apache doris; master pods
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/share-process-namespace/
+  ##
+  shareProcessNamespace: false
+  ## @param namenode.podAffinityPreset Pod affinity preset. Ignored if `namenode.affinity` is set. Allowed values: `soft` or `hard`
+  ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
+  ##
+  podAffinityPreset: ""
+  ## @param namenode.podAntiAffinityPreset Pod anti-affinity preset. Ignored if `namenode.affinity` is set. Allowed values: `soft` or `hard`
+  ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
+  ##
+  podAntiAffinityPreset: soft
+  ## Node namenode.affinity preset
+  ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity
+  ##
+  nodeAffinityPreset:
+    ## @param namenode.nodeAffinityPreset.type Node affinity preset type. Ignored if `namenode.affinity` is set. Allowed values: `soft` or `hard`
+    ##
+    type: ""
+    ## @param namenode.nodeAffinityPreset.key Node label key to match. Ignored if `namenode.affinity` is set
+    ##
+    key: ""
+    ## @param namenode.nodeAffinityPreset.values Node label values to match. Ignored if `namenode.affinity` is set
+    ## E.g.
+    ## values:
+    ##   - e2e-az1
+    ##   - e2e-az2
+    ##
+    values: []
+  ## @param namenode.affinity Affinity for apache doris; master pods assignment
+  ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+  ## NOTE: `namenode.podAffinityPreset`, `namenode.podAntiAffinityPreset`, and `namenode.nodeAffinityPreset` will be ignored when it's set
+  ##
+  affinity: {}
+  ## @param namenode.nodeSelector Node labels for apache doris; master pods assignment
+  ## ref: https://kubernetes.io/docs/user-guide/node-selection/
+  ##
+  nodeSelector: {}
+  ## @param namenode.tolerations Tolerations for apache doris; master pods assignment
+  ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  ##
+  tolerations: []
+  ## @param namenode.spreadConstraints Spread Constraints for apache doris; master pod assignment
+  ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/
+  ## E.g.
+  ## spreadConstraints:
+  ##   - maxSkew: 1
+  ##     topologyKey: node
+  ##     whenUnsatisfiable: DoNotSchedule
+  ##
+  spreadConstraints: {}
+  ## @param namenode.lifecycleHooks for the apache doris; master container(s) to automate configuration before or after startup
+  ##
+  lifecycleHooks: {}
+  ## @param namenode.extraVolumes Optionally specify extra list of additional volumes for the apache doris; master pod(s)
+  ##
+  extraVolumes: []
+  ## @param namenode.extraVolumeMounts Optionally specify extra list of additional volumeMounts for the apache doris; master container(s)
+  ##
+  extraVolumeMounts: []
+  ## @param namenode.sidecars Add additional sidecar containers to the apache doris; master pod(s)
+  ## e.g:
+  ## sidecars:
+  ##   - name: your-image-name
+  ##     image: your-image
+  ##     imagePullPolicy: Always
+  ##     ports:
+  ##       - name: portname
+  ##         containerPort: 1234
+  ##
+  sidecars: []
+  ## @param namenode.initContainers Add additional init containers to the apache doris; master pod(s)
+  ## ref: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+  ## e.g:
+  ## initContainers:
+  ##  - name: your-image-name
+  ##    image: your-image
+  ##    imagePullPolicy: Always
+  ##    command: ['sh', '-c', 'echo "hello world"']
+  ##
+  initContainers: {}
+
+  ## Persistence parameters
+  ## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
+  ##
+  persistence:
+    ## @param namenode.persistence.enabled Enable persistence on apache doris; master nodes using Persistent Volume Claims
+    ##
+    enabled: true
+    ## @param namenode.persistence.path The path the volume will be mounted at on apache doris; master containers
+    ## NOTE: Useful when using different apache doris; images
+    ##
+    path: /data/doris-meta
+
+    ## @param namenode.persistence.subPath The subdirectory of the volume to mount on apache doris; master containers
+    ## NOTE: Useful in dev environments
+    ##
+    subPath: ""
+    ## @param namenode.persistence.storageClass Persistent Volume storage class
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is set, choosing the default provisioner
+    ##
+    storageClass: ""
+    ## @param namenode.persistence.accessModes [array] Persistent Volume access modes
+    ##
+    accessModes:
+      - ReadWriteOnce
+    ## @param namenode.persistence.size Persistent Volume size
+    ##
+    size: 10Gi
+    ## @param namenode.persistence.annotations Additional custom annotations for the PVC
+    ##
+    annotations: {}
+    ## @param namenode.persistence.selector Additional labels to match for the PVC
+    ## e.g:
+    ## selector:
+    ##   matchLabels:
+    ##     app: my-app
+    ##
+    selector: {}
+    ## @param namenode.persistence.existingClaim Use a existing PVC which must be created manually before bound
+    ## NOTE: requires namenode.persistence.enabled: true
+    ##
+    existingClaim: ""
+  ## apache doris; master service parameters
+  ##
+  service:
+    ## @param namenode.service.type apache doris; master service type
+    type: ClusterIP
+    ## @param namenode.service.port apache doris; master service port
+    ##
+    port: 
+      rpcPort: 9020
+      httpPort: 8030
+      queryPort: 9030
+      editLogPort: 9010
+    ## @param namenode.service.nodePort Node port for apache doris; master
+    ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport
+    ## NOTE: choose port between <30000-32767>
+    ##
+    nodePort: ""
+    ## @param namenode.service.externalTrafficPolicy apache doris; master service external traffic policy
+    ## ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
+    ##
+    externalTrafficPolicy: Cluster
+    ## @param namenode.service.clusterIP apache doris; master service Cluster IP
+    ##
+    clusterIP: ""
+    ## @param namenode.service.loadBalancerIP apache doris; master service Load Balancer IP
+    ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
+    ##
+    loadBalancerIP: ""
+    loadBalancerID: ""
+    ## @param namenode.service.loadBalancerSourceRanges apache doris; master service Load Balancer sources
+    ## https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/#restrict-access-for-loadbalancer-service
+    ## e.g.
+    ## loadBalancerSourceRanges:
+    ##   - 10.10.10.0/24
+    ##
+    loadBalancerSourceRanges: []
+    ## @param namenode.service.annotations Additional custom annotations for apache doris; master service
+    ##
+    annotations: {}
+  ## @param namenode.terminationGracePeriodSeconds Integer setting the termination grace period for the redis-master pods
+  ##
+  terminationGracePeriodSeconds: 30
+
+## @section 常规BE配置参数
+##
+backend:
+  ## 指定BACKEND的镜像仓库信息
+  ##
+  image:
+    registry: mirrors.aliyun.com
+    repository: doris-be
+    tag: 1.2.3
+    ## Specify a imagePullPolicy
+    ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+    ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+    ##
+    pullPolicy: Always
+    ## Optionally specify an array of imagePullSecrets.
+    ## Secrets must be manually created in the namespace.
+    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+    ## e.g:
+    ## pullSecrets:
+    ##   - myRegistryKeySecretName
+    ##
+    pullSecrets: []
+    ## Enable debug mode
+    ##
+    debug: false
+
+  ## @param datanode.replicaCount Number of apache doris; replicas to deploy
+  ##
+  replicaCount: 3
+  ## @param datanode.configuration Configuration for apache doris; replicas nodes
+  ##
+  configuration: ""
+  ## @param datanode.command Override default container command (useful when using custom images)
+  ##
+  command: []
+  ## @param datanode.args Override default container args (useful when using custom images)
+  ##
+  args: []
+  ## @param datanode.preExecCmds Additional commands to run prior to starting apache doris; replicas
+  ##
+  preExecCmds: []
+  ## @param datanode.containerPort Container port to open on apache doris; replicas nodes
+  ## 50010 50020 50075 56874
+  containerPort:
+    port: 9060
+    webServerPort: 8040
+    heatbeatPort: 9050
+    brpcPort: 8060
+  ## Configure extra options for apache doris; containers' liveness and readiness probes
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+  ## @param datanode.livenessProbe.enabled Enable livenessProbe on apache doris; replicas nodes
+  ## @param datanode.livenessProbe.initialDelaySeconds Initial delay seconds for livenessProbe
+  ## @param datanode.livenessProbe.periodSeconds Period seconds for livenessProbe
+  ## @param datanode.livenessProbe.timeoutSeconds Timeout seconds for livenessProbe
+  ## @param datanode.livenessProbe.failureThreshold Failure threshold for livenessProbe
+  ## @param datanode.livenessProbe.successThreshold Success threshold for livenessProbe
+  ##
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 200
+    periodSeconds: 10
+    timeoutSeconds: 20
+    successThreshold: 1
+    failureThreshold: 5
+  ## @param datanode.readinessProbe.enabled Enable readinessProbe on apache doris; replicas nodes
+  ## @param datanode.readinessProbe.initialDelaySeconds Initial delay seconds for readinessProbe
+  ## @param datanode.readinessProbe.periodSeconds Period seconds for readinessProbe
+  ## @param datanode.readinessProbe.timeoutSeconds Timeout seconds for readinessProbe
+  ## @param datanode.readinessProbe.failureThreshold Failure threshold for readinessProbe
+  ## @param datanode.readinessProbe.successThreshold Success threshold for readinessProbe
+  ##
+  readinessProbe:
+    enabled: false
+    initialDelaySeconds: 200
+    periodSeconds: 10
+    timeoutSeconds: 20
+    successThreshold: 1
+    failureThreshold: 5
+  ## @param datanode.customLivenessProbe Custom livenessProbe that overrides the default one
+  ##
+  customLivenessProbe: {}
+  ## @param datanode.customReadinessProbe Custom readinessProbe that overrides the default one
+  ##
+  customReadinessProbe: {}
+
+  # 定义Java Heap Size(单位GB)
+  heapSize: 1
+  ## apache doris; replicas resource requests and limits
+  ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+  ## @param datanode.resources.limits The resources limits for the apache doris; replicas containers
+  ## @param datanode.resources.requests The requested resources for the apache doris; replicas containers
+  ##
+  resources:
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    limits: {}
+    #   cpu: 250m
+    #   memory: 256Mi
+    requests: {}
+    #   cpu: 250m
+    #   memory: 256Mi
+  ## Configure Pods Security Context
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
+  ## @param datanode.podSecurityContext.enabled Enabled apache doris; replicas pods' Security Context
+  ## @param datanode.podSecurityContext.fsGroup Set apache doris; replicas pod's Security Context fsGroup
+  ##
+  podSecurityContext:
+    enabled: false
+    fsGroup: 1001
+  ## Configure Container Security Context
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
+  ## @param datanode.containerSecurityContext.enabled Enabled apache doris; replicas containers' Security Context
+  ## @param datanode.containerSecurityContext.runAsUser Set apache doris; replicas containers' Security Context runAsUser
+  ##
+  containerSecurityContext:
+    enabled: false
+    runAsUser: 1001
+  ## @param datanode.schedulerName Alternate scheduler for apache doris; replicas pods
+  ## ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
+  ##
+  schedulerName: ""
+  ## @param datanode.updateStrategy.type apache doris; replicas statefulset strategy type
+  ## @skip datanode.updateStrategy.rollingUpdate
+  ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
+  ##
+  updateStrategy:
+    ## StrategyType
+    ## Can be set to RollingUpdate or OnDelete
+    ##
+    type: RollingUpdate
+    rollingUpdate: {}
+  ## @param datanode.priorityClassName apache doris; replicas pods' priorityClassName
+  ##
+  priorityClassName: ""
+  ## @param datanode.hostAliases apache doris; replicas pods host aliases
+  ## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
+  ##
+  hostAliases: []
+  ## @param datanode.podLabels Extra labels for apache doris; replicas pods
+  ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+  ##
+  podLabels: {}
+  ## @param datanode.podAnnotations Annotations for apache doris; replicas pods
+  ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+  ##
+  podAnnotations: {}
+  ## @param datanode.shareProcessNamespace Share a single process namespace between all of the containers in apache doris; replicas pods
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/share-process-namespace/
+  ##
+  shareProcessNamespace: false
+  ## @param datanode.podAffinityPreset Pod affinity preset. Ignored if `datanode.affinity` is set. Allowed values: `soft` or `hard`
+  ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
+  ##
+  podAffinityPreset: ""
+  ## @param datanode.podAntiAffinityPreset Pod anti-affinity preset. Ignored if `datanode.affinity` is set. Allowed values: `soft` or `hard`
+  ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
+  ##
+  podAntiAffinityPreset: soft
+  ## Node affinity preset
+  ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity
+  ##
+  nodeAffinityPreset:
+    ## @param datanode.nodeAffinityPreset.type Node affinity preset type. Ignored if `datanode.affinity` is set. Allowed values: `soft` or `hard`
+    ##
+    type: ""
+    ## @param datanode.nodeAffinityPreset.key Node label key to match. Ignored if `datanode.affinity` is set
+    ##
+    key: ""
+    ## @param datanode.nodeAffinityPreset.values Node label values to match. Ignored if `datanode.affinity` is set
+    ## E.g.
+    ## values:
+    ##   - e2e-az1
+    ##   - e2e-az2
+    ##
+    values: []
+  ## @param datanode.affinity Affinity for apache doris; replicas pods assignment
+  ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+  ## NOTE: `datanode.podAffinityPreset`, `datanode.podAntiAffinityPreset`, and `datanode.nodeAffinityPreset` will be ignored when it's set
+  ##
+  affinity: {}
+  ## @param datanode.nodeSelector Node labels for apache doris; replicas pods assignment
+  ## ref: https://kubernetes.io/docs/user-guide/node-selection/
+  ##
+  nodeSelector: {}
+  ## @param datanode.tolerations Tolerations for apache doris; replicas pods assignment
+  ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  ##
+  tolerations: []
+  ## @param datanode.spreadConstraints Spread Constraints for apache doris; replicas pod assignment
+  ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/
+  ## E.g.
+  ## spreadConstraints:
+  ##   - maxSkew: 1
+  ##     topologyKey: node
+  ##     whenUnsatisfiable: DoNotSchedule
+  ##
+  spreadConstraints: {}
+  ## @param datanode.lifecycleHooks for the apache doris; replica container(s) to automate configuration before or after startup
+  ##
+  lifecycleHooks: {}
+  ## @param datanode.extraVolumes Optionally specify extra list of additional volumes for the apache doris; replicas pod(s)
+  ##
+  extraVolumes: []
+  ## @param datanode.extraVolumeMounts Optionally specify extra list of additional volumeMounts for the apache doris; replicas container(s)
+  ##
+  extraVolumeMounts: []
+  ## @param datanode.sidecars Add additional sidecar containers to the apache doris; replicas pod(s)
+  ## e.g:
+  ## sidecars:
+  ##   - name: your-image-name
+  ##     image: your-image
+  ##     imagePullPolicy: Always
+  ##     ports:
+  ##       - name: portname
+  ##         containerPort: 1234
+  ##
+  sidecars: []
+  ## @param datanode.initContainers Add additional init containers to the apache doris; replicas pod(s)
+  ## ref: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+  ## e.g:
+  ## initContainers:
+  ##  - name: your-image-name
+  ##    image: your-image
+  ##    imagePullPolicy: Always
+  ##    command: ['sh', '-c', 'echo "hello world"']
+  ##
+  initContainers: []
+  ## Persistence Parameters
+  ## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
+  ##
+  persistence:
+    ## @param datanode.persistence.enabled Enable persistence on apache doris; replicas nodes using Persistent Volume Claims
+    ##
+    enabled: true
+    ## @param datanode.persistence.path The path the volume will be mounted at on apache doris; replicas containers
+    ## NOTE: Useful when using different apache doris; images
+    ##
+    path: /data/doris-data
+
+    ## @param datanode.persistence.subPath The subdirectory of the volume to mount on apache doris; replicas containers
+    ## NOTE: Useful in dev environments
+    ##
+    subPath: ""
+    ## @param datanode.persistence.storageClass Persistent Volume storage class
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is set, choosing the default provisioner
+    ##
+    storageClass: ""
+    ## @param datanode.persistence.accessModes [array] Persistent Volume access modes
+    ##
+    accessModes:
+      - ReadWriteOnce
+    ## @param datanode.persistence.size Persistent Volume size
+    ##
+    size: 10Gi
+    ## @param datanode.persistence.annotations Additional custom annotations for the PVC
+    ##
+    annotations: {}
+    ## @param datanode.persistence.selector Additional labels to match for the PVC
+    ## e.g:
+    ## selector:
+    ##   matchLabels:
+    ##     app: my-app
+    ##
+    selector: {}
+  ## apache doris; replicas service parameters
+  ##
+  service:
+    ## @param datanode.service.type apache doris; replicas service type
+    ##
+    type: ClusterIP
+    ## @param datanode.service.port apache doris; replicas service port
+    ##
+    port:
+      port: 9060
+      webServerPort: 8040
+      heatbeatPort: 9050
+      brpcPort: 8060
+    ## @param datanode.service.nodePort Node port for apache doris; replicas
+    ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport
+    ## NOTE: choose port between <30000-32767>
+    ##
+    nodePort: ""
+    ## @param datanode.service.externalTrafficPolicy apache doris; replicas service external traffic policy
+    ## ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
+    ##
+    externalTrafficPolicy: Cluster
+    ## @param datanode.service.clusterIP apache doris; replicas service Cluster IP
+    ##
+    clusterIP: ""
+    ## @param datanode.service.loadBalancerIP apache doris; replicas service Load Balancer IP
+    ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
+    ##
+    loadBalancerIP: ""
+    ## @param datanode.service.loadBalancerSourceRanges apache doris; replicas service Load Balancer sources
+    ## https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/#restrict-access-for-loadbalancer-service
+    ## e.g.
+    ## loadBalancerSourceRanges:
+    ##   - 10.10.10.0/24
+    ##
+    loadBalancerSourceRanges: []
+    ## @param datanode.service.annotations Additional custom annotations for apache doris; replicas service
+    ##
+    annotations: {}
+  ## @param datanode.terminationGracePeriodSeconds Integer setting the termination grace period for the redis-replicas pods
+  ##
+  terminationGracePeriodSeconds: 30
+  ## Autoscaling configuration
+  ##
+  autoscaling:
+    ## @param datanode.autoscaling.enabled Enable replica autoscaling settings
+    ##
+    enabled: false
+    ## @param datanode.autoscaling.minReplicas Minimum replicas for the pod autoscaling
+    ##
+    minReplicas: 1
+    ## @param datanode.autoscaling.maxReplicas Maximum replicas for the pod autoscaling
+    ##
+    maxReplicas: 11
+    ## @param datanode.autoscaling.targetCPU Percentage of CPU to consider when autoscaling
+    ##
+    targetCPU: ""
+    ## @param datanode.autoscaling.targetMemory Percentage of Memory to consider when autoscaling
+    ##
+    targetMemory: ""
+
+## @section backend computation node configure
+backend-cn:
+  enabled: false
+  image:
+    registry: mirrors.aliyun.com
+    repository: doris-be
+    tag: 1.2.3
+    ## Specify a imagePullPolicy
+    ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+    ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+    ##
+    pullPolicy: Always
+    ## Optionally specify an array of imagePullSecrets.
+    ## Secrets must be manually created in the namespace.
+    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+    ## e.g:
+    ## pullSecrets:
+    ##   - myRegistryKeySecretName
+    ##
+    pullSecrets: []
+    ## Enable debug mode
+    ##
+    debug: false
+
+  replicaCount: 1
+  configuration: ""
+  command: []
+  args: []
+  preExecCmds: []
+  containerPort: 
+    port: 9060
+    webServerPort: 8040
+    heatbeatPort: 9050
+    brpcPort: 8060
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 5
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 5
+  customLivenessProbe: {}
+  customReadinessProbe: {}
+
+  # 定义Java Heap Size(单位GB)
+  heapSize: 1
+  resources:
+    limits: {}
+    #   cpu: 250m
+    #   memory: 256Mi
+    requests: {}
+    #   cpu: 250m
+    #   memory: 256Mi
+  podSecurityContext:
+    enabled: false
+    fsGroup: 1001
+  containerSecurityContext:
+    enabled: false
+    runAsUser: 1001
+  schedulerName: ""
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate: {}
+  priorityClassName: ""
+  hostAliases: []
+  podLabels: {}
+  podAnnotations: {}
+  shareProcessNamespace: false
+  podAffinityPreset: ""
+  podAntiAffinityPreset: soft
+  nodeAffinityPreset:
+    type: ""
+    key: ""
+    values: []
+  affinity: {}
+  nodeSelector: {}
+  tolerations: []
+  spreadConstraints: {}
+  lifecycleHooks: {}
+  extraVolumes: []
+  extraVolumeMounts: []
+  sidecars: []
+  initContainers: []
+  persistence:
+    enabled: true
+    path: /data/doris-data
+
+    subPath: ""
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
+    annotations: {}
+    selector: {}
+  service:
+    type: ClusterIP
+    port:
+      port: 9060
+      webServerPort: 8040
+      heatbeatPort: 9050
+      brpcPort: 8060
+    nodePort: ""
+    externalTrafficPolicy: Cluster
+    clusterIP: ""
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: []
+    annotations: {}
+  terminationGracePeriodSeconds: 30
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 11
+    targetCPU: ""
+    targetMemory: ""
+
+## @section broker computation node configure
+broker:
+  enabled: false
+  image:
+    registry: mirrors.aliyun.com
+    repository: doris-broker
+    tag: 1.2.3
+    ## Specify a imagePullPolicy
+    ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+    ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+    ##
+    pullPolicy: Always
+    ## Optionally specify an array of imagePullSecrets.
+    ## Secrets must be manually created in the namespace.
+    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+    ## e.g:
+    ## pullSecrets:
+    ##   - myRegistryKeySecretName
+    ##
+    pullSecrets: []
+    ## Enable debug mode
+    ##
+    debug: false
+
+  replicaCount: 1
+  configuration: ""
+  command: []
+  args: []
+  preExecCmds: []
+  containerPort: 
+    port: 9060
+    webServerPort: 8040
+    heatbeatPort: 9050
+    brpcPort: 8060
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 5
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 5
+  customLivenessProbe: {}
+  customReadinessProbe: {}
+
+  # 定义Java Heap Size(单位GB)
+  heapSize: 1
+  resources:
+    limits: {}
+    #   cpu: 250m
+    #   memory: 256Mi
+    requests: {}
+    #   cpu: 250m
+    #   memory: 256Mi
+  podSecurityContext:
+    enabled: false
+    fsGroup: 1001
+  containerSecurityContext:
+    enabled: false
+    runAsUser: 1001
+  schedulerName: ""
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate: {}
+  priorityClassName: ""
+  hostAliases: []
+  podLabels: {}
+  podAnnotations: {}
+  shareProcessNamespace: false
+  podAffinityPreset: ""
+  podAntiAffinityPreset: soft
+  nodeAffinityPreset:
+    type: ""
+    key: ""
+    values: []
+  affinity: {}
+  nodeSelector: {}
+  tolerations: []
+  spreadConstraints: {}
+  lifecycleHooks: {}
+  extraVolumes: []
+  extraVolumeMounts: []
+  sidecars: []
+  initContainers: []
+  persistence:
+    enabled: true
+    path: /data/doris-data
+
+    subPath: ""
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
+    annotations: {}
+    selector: {}
+  service:
+    type: ClusterIP
+    port:
+      port: 9060
+      webServerPort: 8040
+      heatbeatPort: 9050
+      brpcPort: 8060
+    nodePort: ""
+    externalTrafficPolicy: Cluster
+    clusterIP: ""
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: []
+    annotations: {}
+  terminationGracePeriodSeconds: 30
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 11
+    targetCPU: ""
+    targetMemory: ""
+
+## @section Other Parameters
+##
+
+## Network Policy configuration
+## ref: https://kubernetes.io/docs/concepts/services-networking/network-policies/
+##
+networkPolicy:
+  ## @param networkPolicy.enabled Enable creation of NetworkPolicy resources
+  ##
+  enabled: false
+  ## @param networkPolicy.allowExternal Don't require client label for connections
+  ## When set to false, only pods with the correct client label will have network access to the ports
+  ## apache doris; is listening on. When true, apache doris; will accept connections from any source
+  ## (with the correct destination port).
+  ##
+  allowExternal: true
+  ## @param networkPolicy.extraIngress Add extra ingress rules to the NetworkPolicy
+  ## e.g:
+  ## extraIngress:
+  ##   - ports:
+  ##       - port: 1234
+  ##     from:
+  ##       - podSelector:
+  ##           - matchLabels:
+  ##               - role: frontend
+  ##       - podSelector:
+  ##           - matchExpressions:
+  ##               - key: role
+  ##                 operator: In
+  ##                 values:
+  ##                   - frontend
+  ##
+  extraIngress: []
+  ## @param networkPolicy.extraEgress Add extra ingress rules to the NetworkPolicy
+  ## e.g:
+  ## extraEgress:
+  ##   - ports:
+  ##       - port: 1234
+  ##     to:
+  ##       - podSelector:
+  ##           - matchLabels:
+  ##               - role: frontend
+  ##       - podSelector:
+  ##           - matchExpressions:
+  ##               - key: role
+  ##                 operator: In
+  ##                 values:
+  ##                   - frontend
+  ##
+  extraEgress: []
+  ## @param networkPolicy.ingressNSMatchLabels Labels to match to allow traffic from other namespaces
+  ## @param networkPolicy.ingressNSPodMatchLabels Pod labels to match to allow traffic from other namespaces
+  ##
+  ingressNSMatchLabels: {}
+  ingressNSPodMatchLabels: {}
+## PodSecurityPolicy configuration
+## ref: https://kubernetes.io/docs/concepts/policy/pod-security-policy/
+##
+podSecurityPolicy:
+  ## @param podSecurityPolicy.create Specifies whether a PodSecurityPolicy should be created (set `podSecurityPolicy.enabled` to `true` to enable it)
+  ##
+  create: false
+  ## @param podSecurityPolicy.enabled Enable PodSecurityPolicy
+  ##
+  enabled: false
+## RBAC configuration
+##
+rbac:
+  ## @param rbac.create Specifies whether RBAC resources should be created
+  ##
+  create: false
+  ## @param rbac.rules Custom RBAC rules to set
+  ## e.g:
+  ## rules:
+  ##   - apiGroups:
+  ##       - ""
+  ##     resources:
+  ##       - pods
+  ##     verbs:
+  ##       - get
+  ##       - list
+  ##
+  rules: []
+## ServiceAccount configuration
+##
+serviceAccount:
+  ## @param serviceAccount.create Specifies whether a ServiceAccount should be created
+  ##
+  create: false
+  ## @param serviceAccount.name The name of the ServiceAccount to use.
+  ## If not set and create is true, a name is generated using the common.names.fullname template
+  ##
+  name: ""
+  ## @param serviceAccount.automountServiceAccountToken Whether to auto mount the service account token
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#use-the-default-service-account-to-access-the-api-server
+  ##
+  automountServiceAccountToken: true
+  ## @param serviceAccount.annotations Additional custom annotations for the ServiceAccount
+  ##
+  annotations: {}
+## apache doris; Pod Disruption Budget configuration
+## ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
+##
+pdb:
+  ## @param pdb.create Specifies whether a PodDisruptionBudget should be created
+  ##
+  create: false
+  ## @param pdb.minAvailable Min number of pods that must still be available after the eviction
+  ##
+  minAvailable: 1
+  ## @param pdb.maxUnavailable Max number of pods that can be unavailable after the eviction
+  ##
+  maxUnavailable: ""
+
+## @section Init Container Parameters
+##
+
+## 'volumePermissions' init container parameters
+## Changes the owner and group of the persistent volume mount point to runAsUser:fsGroup values
+##   based on the *podSecurityContext/*containerSecurityContext parameters
+##
+volumePermissions:
+  ## @param volumePermissions.enabled Enable init container that changes the owner/group of the PV mount point to `runAsUser:fsGroup`
+  ##
+  enabled: false
+  ## Bitnami Shell image
+  ## ref: https://hub.docker.com/r/bitnami/bitnami-shell/tags/
+  ## @param volumePermissions.image.registry Bitnami Shell image registry
+  ## @param volumePermissions.image.repository Bitnami Shell image repository
+  ## @param volumePermissions.image.tag Bitnami Shell image tag (immutable tags are recommended)
+  ## @param volumePermissions.image.pullPolicy Bitnami Shell image pull policy
+  ## @param volumePermissions.image.pullSecrets Bitnami Shell image pull secrets
+  ##
+  image:
+    registry: docker.io
+    repository: bitnami/bitnami-shell
+    tag: 10-debian-10-r174
+    pullPolicy: Always
+    ## Optionally specify an array of imagePullSecrets.
+    ## Secrets must be manually created in the namespace.
+    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+    ## e.g:
+    ## pullSecrets:
+    ##   - myRegistryKeySecretName
+    ##
+    pullSecrets: []
+  ## Init container's resource requests and limits
+  ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+  ## @param volumePermissions.resources.limits The resources limits for the init container
+  ## @param volumePermissions.resources.requests The requested resources for the init container
+  ##
+  resources:
+    limits: {}
+    requests: {}
+  ## Init container Container Security Context
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
+  ## @param volumePermissions.containerSecurityContext.runAsUser Set init container's Security Context runAsUser
+  ## NOTE: when runAsUser is set to special value "auto", init container will try to chown the
+  ##   data folder to auto-determined user&group, using commands: `id -u`:`id -G | cut -d" " -f2`
+  ##   "auto" is especially useful for OpenShift which has scc with dynamic user ids (and 0 is not allowed)
+  ##
+  containerSecurityContext:
+    runAsUser: 0
+
+## init-sysctl container parameters
+## used to perform sysctl operation to modify Kernel settings (needed sometimes to avoid warnings)
+##
+sysctl:
+  ## @param sysctl.enabled Enable init container to modify Kernel settings
+  ##
+  enabled: true
+  ## Bitnami Shell image
+  ## ref: https://hub.docker.com/r/bitnami/bitnami-shell/tags/
+  ## @param sysctl.image.registry Bitnami Shell image registry
+  ## @param sysctl.image.repository Bitnami Shell image repository
+  ## @param sysctl.image.tag Bitnami Shell image tag (immutable tags are recommended)
+  ## @param sysctl.image.pullPolicy Bitnami Shell image pull policy
+  ## @param sysctl.image.pullSecrets Bitnami Shell image pull secrets
+  ##
+  image:
+    registry: docker.io
+    repository: bitnami/bitnami-shell
+    tag: 10-debian-10-r174
+    pullPolicy: Always
+    ## Optionally specify an array of imagePullSecrets.
+    ## Secrets must be manually created in the namespace.
+    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+    ## e.g:
+    ## pullSecrets:
+    ##   - myRegistryKeySecretName
+    ##
+    pullSecrets: []
+  ## @param sysctl.command Override default init-sysctl container command (useful when using custom images)
+  ##
+  command: []
+  ## @param sysctl.mountHostSys Mount the host `/sys` folder to `/host-sys`
+  ##
+  mountHostSys: false
+  ## Init container's resource requests and limits
+  ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+  ## @param sysctl.resources.limits The resources limits for the init container
+  ## @param sysctl.resources.requests The requested resources for the init container
+  ##
+  resources:
+    limits: {}
+    requests: {}

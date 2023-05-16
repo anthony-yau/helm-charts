@@ -1,0 +1,6 @@
+1. Get the doris pods
+kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/instance={{ .Release.Name }}"
+
+2. Get the doris fe service
+kubectl get service --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/instance={{ .Release.Name }},app.kubernetes.io/component=doris-frontend"
+

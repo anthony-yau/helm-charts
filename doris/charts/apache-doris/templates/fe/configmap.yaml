@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ printf "%s" (include "doris.frontend.name" .) }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    {{- if .Values.commonLabels }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+data:
+  fe.conf: |
+    # priority_networks = 172.16.0.0/24
+    #It can automatically maintain node information by getting the number of replicas of StatefulSet, similar to alter system add/drop back
+    enable_deploy_manager = k8s
+    #Automatically adjust the IP of the node according to the domain name (for example, after the pod is restarted, the domain name is still doris-be-cluster1-0-doris-be-cluster1.default.svc.cluster.local, but the IP may change from 172.16.0.9 to 172.16.0.10)
+    enable_fqdn_mode = true
+    LOG_DIR = ${DORIS_HOME}/log
+    sys_log_level = INFO
+    http_port = 8030
+    rpc_port = 9020
+    query_port = 9030
+    edit_log_port = 9010
+    mysql_service_nio_enabled = true
+    #Doris needs to generate the log4j configuration file according to the fe.yml configuration information, which is written in the same directory as fe.yml by default, but the config we mount is readonly, so specify this configuration to write the log4j file to another location
+    custom_config_dir = /opt/apache-doris/
+    #when set to false, the backend will not be dropped and remaining in DECOMMISSION state
+    drop_backend_after_decommission = false
+    meta_dir = {{ .Values.frontend.persistence.path }}

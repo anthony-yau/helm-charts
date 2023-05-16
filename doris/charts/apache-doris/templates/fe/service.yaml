@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ printf "%s" (include "doris.frontend.name" .) }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: doris-frontend
+    {{- if .Values.commonLabels }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- if or .Values.frontend.service.annotations .Values.commonAnnotations }}
+  annotations:
+    {{- if .Values.frontend.service.annotations }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.frontend.service.annotations "context" $ ) | nindent 4 }}
+    {{- end }}
+    {{- if .Values.commonAnnotations }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- end }}
+spec:
+  type: ClusterIP
+  clusterIP: None
+  {{ if eq .Values.frontend.service.type "LoadBalancer" }}
+  externalTrafficPolicy: {{ .Values.frontend.service.externalTrafficPolicy }}
+  {{- end }}
+  {{- if and (eq .Values.frontend.service.type "LoadBalancer") .Values.frontend.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.frontend.service.loadBalancerIP }}
+  {{- end }}
+  {{- if and (eq .Values.frontend.service.type "LoadBalancer") .Values.frontend.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges: {{- toYaml .Values.frontend.service.loadBalancerSourceRanges | nindent 4 }}
+  {{- end }}
+  {{- if and (eq .Values.frontend.service.type "ClusterIP") .Values.frontend.service.clusterIP }}
+  clusterIP: {{ .Values.frontend.service.clusterIP }}
+  {{- end }}
+  ports:
+    - name: http-port
+      port: {{ .Values.frontend.service.port.httpPort }}
+      {{- if and (or (eq .Values.frontend.service.type "NodePort") (eq .Values.frontend.service.type "LoadBalancer")) .Values.frontend.service.nodePort }}
+      nodePort: {{ .Values.frontend.service.nodePort }}
+      {{- else if eq .Values.frontend.service.type "ClusterIP" }}
+      nodePort: null
+      {{- end }}
+    - name: rpc-port
+      port: {{ .Values.frontend.service.port.rpcPort }}
+      {{- if and (or (eq .Values.frontend.service.type "NodePort") (eq .Values.frontend.service.type "LoadBalancer")) .Values.frontend.service.nodePort }}
+      nodePort: {{ .Values.frontend.service.nodePort }}
+      {{- else if eq .Values.frontend.service.type "ClusterIP" }}
+      nodePort: null
+      {{- end }}
+    - name: query-port
+      port: {{ .Values.frontend.service.port.queryPort }}
+      {{- if and (or (eq .Values.frontend.service.type "NodePort") (eq .Values.frontend.service.type "LoadBalancer")) .Values.frontend.service.nodePort }}
+      nodePort: {{ .Values.frontend.service.nodePort }}
+      {{- else if eq .Values.frontend.service.type "ClusterIP" }}
+      nodePort: null
+      {{- end }}
+    - name: edit-log-port
+      port: {{ .Values.frontend.service.port.editLogPort }}
+      {{- if and (or (eq .Values.frontend.service.type "NodePort") (eq .Values.frontend.service.type "LoadBalancer")) .Values.frontend.service.nodePort }}
+      nodePort: {{ .Values.frontend.service.nodePort }}
+      {{- else if eq .Values.frontend.service.type "ClusterIP" }}
+      nodePort: null
+      {{- end }}
+  selector: {{- include "common.labels.matchLabels" . | nindent 4 }}
+    app.kubernetes.io/component: doris-frontend
