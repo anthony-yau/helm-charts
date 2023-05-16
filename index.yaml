@@ -1,9 +1,26 @@
 apiVersion: v1
 entries:
+  doris:
+  - apiVersion: v2
+    appVersion: 1.2.3
+    created: "2023-05-16T20:35:49.066880197+08:00"
+    dependencies:
+    - name: common
+      repository: https://charts.bitnami.com/bitnami
+      tags:
+      - bitnami-common
+      version: 1.x.x
+    description: A Helm chart for Apache Doris
+    digest: da90507f49214720cc20b9883ca078e41e6b50653d07dc89e04ee584daa26524
+    name: doris
+    type: application
+    urls:
+    - https://anthony-yau.github.io/helm-charts/doris-1.0.0.tgz
+    version: 1.0.0
   hdfs-ha:
   - apiVersion: v2
     appVersion: 2.9.2
-    created: "2022-12-08T14:53:02.458970828+08:00"
+    created: "2023-05-16T20:35:49.072527679+08:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami
@@ -17,4 +34,4 @@ entries:
     urls:
     - https://anthony-yau.github.io/helm-charts/hdfs-ha-1.0.0.tgz
     version: 1.0.0
-generated: "2022-12-08T14:53:02.444563937+08:00"
+generated: "2023-05-16T20:35:49.062036176+08:00"
