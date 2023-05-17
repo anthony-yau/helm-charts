@@ -89,6 +89,9 @@ frontend:
     ## Enable debug mode
     ##
     debug: false
+  
+  metrics:
+    enabled: true
   # 
   replicaCount: 3
   ## @param namenode.configuration Configuration for apache doris; master nodes
@@ -393,6 +396,8 @@ backend:
     ##
     debug: false
 
+  metrics:
+    enabled: true
   ## @param datanode.replicaCount Number of apache doris; replicas to deploy
   ##
   replicaCount: 3
@@ -697,8 +702,10 @@ backend:
     targetMemory: ""
 
 ## @section backend computation node configure
-backend-cn:
+backendcn:
   enabled: false
+  metrics:
+    enabled: true
   image:
     registry: mirrors.aliyun.com
     repository: doris-be
@@ -738,7 +745,7 @@ backend-cn:
     successThreshold: 1
     failureThreshold: 5
   readinessProbe:
-    enabled: true
+    enabled: false
     initialDelaySeconds: 10
     periodSeconds: 5
     timeoutSeconds: 5
@@ -821,6 +828,8 @@ backend-cn:
 ## @section broker computation node configure
 broker:
   enabled: false
+  metrics:
+    enabled: true
   image:
     registry: mirrors.aliyun.com
     repository: doris-broker

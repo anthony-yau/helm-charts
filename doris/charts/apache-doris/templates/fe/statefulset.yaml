@@ -95,9 +95,9 @@ spec:
             - name: FE_INIT_NUMBER
               value: "{{ .Values.frontend.replicaCount }}"
             - name: CN_SERVICE
-              value: "{{ printf "%s" (include "doris.backend-cn.name" .) }}"
+              value: "{{ printf "%s" (include "doris.backendcn.name" .) }}"
             - name: CN_STATEFULSET
-              value: "{{ printf "%s" (include "doris.backend-cn.name" .) }}"
+              value: "{{ printf "%s" (include "doris.backendcn.name" .) }}"
             - name: BE_SERVICE
               value: "{{ printf "%s" (include "doris.backend.name" .) }}"
             - name: BE_STATEFULSET

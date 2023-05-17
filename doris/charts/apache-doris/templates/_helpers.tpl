@@ -81,6 +81,13 @@ Return the proper doris be image name
 {{- end -}}
 
 {{/*
+Return the proper doris be image name
+*/}}
+{{- define "doris.backendcn.image" -}}
+{{ include "common.images.image" (dict "imageRoot" .Values.backendcn.image "global" .Values.global) }}
+{{- end -}}
+
+{{/*
 Return the proper image name (for the init container volume-permissions image)
 */}}
 {{- define "doris.volumePermissions.image" -}}
@@ -122,6 +129,6 @@ Return the doris be name
 {{/*
 Return the doris be computation name
 */}}
-{{- define "doris.backend-cn.name" -}}
+{{- define "doris.backendcn.name" -}}
 {{ printf "%s-be-cn" (include "doris.fullname" .) | trunc 63 | trimSuffix "-"  }}
 {{- end -}}

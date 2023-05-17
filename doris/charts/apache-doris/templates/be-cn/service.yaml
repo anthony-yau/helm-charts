@@ -1,0 +1,67 @@
+{{- if .Values.backendcn.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ printf "%s" (include "doris.backendcn.name" .) }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: doris-backendcn
+    {{- if .Values.commonLabels }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- if or .Values.backendcn.service.annotations .Values.commonAnnotations }}
+  annotations:
+    {{- if .Values.backendcn.service.annotations }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.backendcn.service.annotations "context" $ ) | nindent 4 }}
+    {{- end }}
+    {{- if .Values.commonAnnotations }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- end }}
+spec:
+  type: ClusterIP
+  clusterIP: None
+  {{ if eq .Values.backendcn.service.type "LoadBalancer" }}
+  externalTrafficPolicy: {{ .Values.backendcn.service.externalTrafficPolicy }}
+  {{- end }}
+  {{- if and (eq .Values.backendcn.service.type "LoadBalancer") .Values.backendcn.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.backendcn.service.loadBalancerIP }}
+  {{- end }}
+  {{- if and (eq .Values.backendcn.service.type "LoadBalancer") .Values.backendcn.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges: {{- toYaml .Values.backendcn.service.loadBalancerSourceRanges | nindent 4 }}
+  {{- end }}
+  {{- if and (eq .Values.backendcn.service.type "ClusterIP") .Values.backendcn.service.clusterIP }}
+  clusterIP: {{ .Values.backendcn.service.clusterIP }}
+  {{- end }}
+  ports:
+    - name: be-port
+      port: {{ .Values.backendcn.service.port.port }}
+      {{- if and (or (eq .Values.backendcn.service.type "NodePort") (eq .Values.backendcn.service.type "LoadBalancer")) .Values.backendcn.service.nodePort }}
+      nodePort: {{ .Values.backendcn.service.nodePort }}
+      {{- else if eq .Values.backendcn.service.type "ClusterIP" }}
+      nodePort: null
+      {{- end }}
+    - name: webserver-port
+      port: {{ .Values.backendcn.service.port.webServerPort }}
+      {{- if and (or (eq .Values.backendcn.service.type "NodePort") (eq .Values.backendcn.service.type "LoadBalancer")) .Values.backendcn.service.nodePort }}
+      nodePort: {{ .Values.backendcn.service.nodePort }}
+      {{- else if eq .Values.backendcn.service.type "ClusterIP" }}
+      nodePort: null
+      {{- end }}
+    - name: heartbeat-port
+      port: {{ .Values.backendcn.service.port.heatbeatPort }}
+      {{- if and (or (eq .Values.backendcn.service.type "NodePort") (eq .Values.backendcn.service.type "LoadBalancer")) .Values.backendcn.service.nodePort }}
+      nodePort: {{ .Values.backendcn.service.nodePort }}
+      {{- else if eq .Values.backendcn.service.type "ClusterIP" }}
+      nodePort: null
+      {{- end }}
+    - name: brpc-port
+      port: {{ .Values.backendcn.service.port.brpcPort }}
+      {{- if and (or (eq .Values.backendcn.service.type "NodePort") (eq .Values.backendcn.service.type "LoadBalancer")) .Values.backendcn.service.nodePort }}
+      nodePort: {{ .Values.backendcn.service.nodePort }}
+      {{- else if eq .Values.backendcn.service.type "ClusterIP" }}
+      nodePort: null
+      {{- end }}
+  selector: {{- include "common.labels.matchLabels" . | nindent 4 }}
+    app.kubernetes.io/component: doris-backendcn
+{{- end }}

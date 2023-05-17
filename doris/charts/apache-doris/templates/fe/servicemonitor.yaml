@@ -1,0 +1,31 @@
+{{- if .Values.frontend.metrics.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ printf "%s" (include "doris.frontend.name" .) }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: doris-frontend
+    {{- if .Values.commonLabels }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- if or .Values.frontend.service.annotations .Values.commonAnnotations }}
+  annotations:
+    {{- if .Values.frontend.service.annotations }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.frontend.service.annotations "context" $ ) | nindent 4 }}
+    {{- end }}
+    {{- if .Values.commonAnnotations }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- end }}
+spec:
+  endpoints:
+    - interval: 15s
+      path: /metrics
+      port: httpPort
+  namespaceSelector:
+    any: true
+  selector:
+    matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: doris-frontend
+{{- end }}

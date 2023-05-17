@@ -1,0 +1,33 @@
+{{- if .Values.backendcn.enabled }}
+{{- if .Values.backendcn.metrics.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ printf "%s" (include "doris.backendcn.name" .) }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: doris-backendcn
+    {{- if .Values.commonLabels }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- if or .Values.backendcn.service.annotations .Values.commonAnnotations }}
+  annotations:
+    {{- if .Values.backendcn.service.annotations }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.backendcn.service.annotations "context" $ ) | nindent 4 }}
+    {{- end }}
+    {{- if .Values.commonAnnotations }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- end }}
+spec:
+  endpoints:
+    - interval: 15s
+      path: /metrics
+      port: webServerPort
+  namespaceSelector:
+    any: true
+  selector:
+    matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: doris-backendcn
+{{- end }}
+{{- end }}
