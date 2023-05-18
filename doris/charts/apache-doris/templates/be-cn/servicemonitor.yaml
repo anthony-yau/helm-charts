@@ -7,6 +7,7 @@ metadata:
   namespace: {{ .Release.Namespace | quote }}
   labels: {{- include "common.labels.standard" . | nindent 4 }}
     app.kubernetes.io/component: doris-backendcn
+    release: kube-prometheus
     {{- if .Values.commonLabels }}
     {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
     {{- end }}
@@ -20,6 +21,9 @@ metadata:
     {{- end }}
   {{- end }}
 spec:
+  jobLabel: app.kubernetes.io/instance
+  targetLabels:
+    - group
   endpoints:
     - interval: 15s
       path: /metrics
