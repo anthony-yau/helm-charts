@@ -6,7 +6,7 @@ ENV JAVA_HOME="/usr/local/openjdk-8/" \
     PATH="/opt/apache-doris/fe/bin:$PATH"
 
 # 下载软件至镜像内，可根据需要替换
-COPY ./resource/apache-doris-fe-1.2.3-bin-x86_64/ /opt/apache-doris/fe/
+COPY ./resource/apache-doris-fe-1.2.4.1-bin-x86_64/ /opt/apache-doris/fe/
 
 RUN apt-get update && \
     apt-get install -y default-mysql-client && \

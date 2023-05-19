@@ -29,3 +29,12 @@ data:
     #when set to false, the backend will not be dropped and remaining in DECOMMISSION state
     drop_backend_after_decommission = false
     meta_dir = {{ .Values.frontend.persistence.path }}
+    qe_max_connection = 1024
+    max_connection_scheduler_threads_num = 4096
+    thrift_server_max_worker_threads = 4096
+    thrift_backlog_num = 1024
+    grpc_max_message_size_bytes = 2147483647
+    drop_backend_after_decommission = false
+    lower_case_table_names = 1
+    
+

@@ -72,7 +72,7 @@ frontend:
   image:
     registry: mirrors.aliyun.com
     repository: doris-fe
-    tag: 1.2.3
+    tag: 1.2.4.1
     ## Specify a imagePullPolicy
     ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
     ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -378,7 +378,7 @@ backend:
   image:
     registry: mirrors.aliyun.com
     repository: doris-be
-    tag: 1.2.3
+    tag: 1.2.4.1
     ## Specify a imagePullPolicy
     ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
     ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -709,7 +709,7 @@ backendcn:
   image:
     registry: mirrors.aliyun.com
     repository: doris-be
-    tag: 1.2.3
+    tag: 1.2.4.1
     ## Specify a imagePullPolicy
     ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
     ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -833,7 +833,7 @@ broker:
   image:
     registry: mirrors.aliyun.com
     repository: doris-broker
-    tag: 1.2.3
+    tag: 1.2.4.1
     ## Specify a imagePullPolicy
     ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
     ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images

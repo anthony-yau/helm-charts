@@ -27,7 +27,7 @@ spec:
   endpoints:
     - interval: 15s
       path: /metrics
-      port: webServerPort
+      port: webserver-port
   namespaceSelector:
     any: true
   selector:
