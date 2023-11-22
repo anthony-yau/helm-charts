@@ -12,6 +12,7 @@ metadata:
   {{- end }}
 data:
   fe.conf: |
+    JAVA_OPTS="-Xmx{{ .Values.frontend.heapSize }}g -XX:+UseMembar -XX:SurvivorRatio=8 -XX:MaxTenuringThreshold=7 -XX:+PrintGCDateStamps -XX:+PrintGCDetails -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+CMSClassUnloadingEnabled -XX:-CMSParallelRemarkEnabled -XX:CMSInitiatingOccupancyFraction=80 -XX:SoftRefLRUPolicyMSPerMB=0 -Xloggc:$DORIS_HOME/log/fe.gc.log.$DATE"
     # priority_networks = 172.16.0.0/24
     #It can automatically maintain node information by getting the number of replicas of StatefulSet, similar to alter system add/drop back
     enable_deploy_manager = k8s
@@ -36,5 +37,7 @@ data:
     grpc_max_message_size_bytes = 2147483647
     drop_backend_after_decommission = false
     lower_case_table_names = 1
-    
+    #parallel_fragment_exec_instance_num = 8
+    #exec_mem_limit = 48G
+    #batch_size = 4096
 
